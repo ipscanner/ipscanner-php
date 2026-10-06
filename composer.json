@@ -1,0 +1,45 @@
+{
+    "name": "ipscanner.io/sdk",
+    "type": "library",
+    "description": "Official PHP client for the IPScanner API: IP lookups, VPN and proxy detection, bulk checks, Agentscan and provenance.",
+    "keywords": ["ipscanner", "ip", "vpn", "proxy", "geolocation", "asn", "bot detection", "agentscan"],
+    "homepage": "https://ipscanner.io",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "IPScanner",
+            "homepage": "https://ipscanner.io"
+        }
+    ],
+    "support": {
+        "docs": "https://ipscanner.io/api-documentation",
+        "issues": "https://github.com/ipscanner/ipscanner-php/issues",
+        "source": "https://github.com/ipscanner/ipscanner-php"
+    },
+    "require": {
+        "php": ">=8.1",
+        "ext-curl": "*",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.0",
+        "phpunit/phpunit": "^10.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "IPScanner\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "IPScanner\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "lint": "phpstan analyse --no-progress",
+        "test": "phpunit"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

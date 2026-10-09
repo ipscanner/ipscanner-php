@@ -122,4 +122,57 @@ final class ErrorTest extends TestCase
             $this->assertSame('<html>oops</html>', $e->body);
         }
     }
+
+    public function testGateVerifyInvalidSecret(): void
+    {
+        $this->transport->push(401, ['success' => false, 'error' => 'invalid_secret', 'message' => "The secret does not match this token's site"]);
+
+        try {
+            $this->client()->gate->verify('gs_wrong', 'tok_1');
+            $this->fail('Expected an exception');
+        } catch (AuthenticationException $e) {
+            $this->assertSame(401, $e->status);
+            $this->assertSame('invalid_secret', $e->errorCode);
+        }
+    }
+
+    public function testGateVerifyIsNeverRetried(): void
+    {
+        $this->transport->push(503, ['success' => false, 'error' => 'unavailable', 'message' => 'Try again']);
+
+        try {
+            $this->client()->gate->verify('gs_secret', 'tok_1');
+            $this->fail('Expected an exception');
+        } catch (ApiException $e) {
+            $this->assertSame(503, $e->status);
+            $this->assertSame('unavailable', $e->errorCode);
+        }
+        $this->assertCount(1, $this->transport->requests);
+    }
+
+    public function testGateVerifyBadToken(): void
+    {
+        $this->transport->push(400, ['success' => false, 'error' => 'already_used', 'message' => 'This token was already verified']);
+
+        try {
+            $this->client()->gate->verify('gs_secret', 'tok_1');
+            $this->fail('Expected an exception');
+        } catch (ApiException $e) {
+            $this->assertSame(400, $e->status);
+            $this->assertSame('already_used', $e->errorCode);
+            $this->assertNotInstanceOf(AuthenticationException::class, $e);
+        }
+    }
+
+    public function testSitesPolicyUnknownSite(): void
+    {
+        $this->transport->push(404, ['error' => 'unknown_site', 'message' => 'No site with this id']);
+
+        try {
+            $this->client()->sites->policy('nope');
+            $this->fail('Expected an exception');
+        } catch (NotFoundException $e) {
+            $this->assertSame('unknown_site', $e->errorCode);
+        }
+    }
 }

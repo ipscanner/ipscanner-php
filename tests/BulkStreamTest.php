@@ -72,4 +72,28 @@ final class BulkStreamTest extends TestCase
             $this->assertSame(10, $e->retryAfter);
         }
     }
+
+    public function testLockedResultLineTreatsNullAsMissing(): void
+    {
+        $this->transport->push(200, implode("\n", [
+            '{"type":"meta","total":1,"metered":1,"planRequired":"Starter"}',
+            '{"type":"result","ip":"1.2.3.4","classification":"vpn","score":null,"grade":null,"verdict":null,"vpnProvider":null,"locked":["score","grade","verdict","vpnProvider"],"extra":true}',
+            '{"type":"result","index":1,"ip":"5.6.7.8","classification":"vpn","vpnProvider":"Mullvad","score":40}',
+            '{"type":"done","reason":"complete","processed":2,"total":2}',
+        ]));
+
+        $events = iterator_to_array($this->client()->bulk->stream(ips: ['1.2.3.4', '5.6.7.8']), false);
+
+        $this->assertSame('Starter', $events[0]['planRequired']);
+        $this->assertSame([], $events[0]['locked']);
+        $this->assertSame(0, $events[1]['score']);
+        $this->assertSame('', $events[1]['grade']);
+        $this->assertSame('', $events[1]['verdict']);
+        $this->assertSame('', $events[1]['vpnProvider']);
+        $this->assertSame(['score', 'grade', 'verdict', 'vpnProvider'], $events[1]['locked']);
+        $this->assertTrue($events[1]['extra']);
+        $this->assertSame('Mullvad', $events[2]['vpnProvider']);
+        $this->assertSame('', $events[2]['planRequired']);
+        $this->assertTrue($events[3]['complete']);
+    }
 }

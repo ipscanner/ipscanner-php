@@ -20,7 +20,7 @@ final class ClientTest extends TestCase
         $this->assertSame('GET', $request['method']);
         $this->assertSame('https://ipscanner.io/v1/vpn/1.2.3.4', $request['url']);
         $this->assertSame('Bearer sk_test', $request['headers']['Authorization']);
-        $this->assertSame('ipscanner-php/0.1.0', $request['headers']['User-Agent']);
+        $this->assertSame('ipscanner-php/0.2.0', $request['headers']['User-Agent']);
         $this->assertSame('application/json', $request['headers']['Accept']);
         $this->assertArrayNotHasKey('Content-Type', $request['headers']);
         $this->assertSame(['ip' => '1.2.3.4', 'isVpn' => false], $result);

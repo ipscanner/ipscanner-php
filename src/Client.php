@@ -18,13 +18,16 @@ use IPScanner\Resource\Agentscan;
 use IPScanner\Resource\AsnDirectory;
 use IPScanner\Resource\Bulk;
 use IPScanner\Resource\Crawlers;
+use IPScanner\Resource\Edge;
+use IPScanner\Resource\Gate;
 use IPScanner\Resource\Ip;
 use IPScanner\Resource\Provenance;
+use IPScanner\Resource\Sites;
 use JsonException;
 
 final class Client
 {
-    public const VERSION = '0.1.0';
+    public const VERSION = '0.2.0';
     public const DEFAULT_BASE_URL = 'https://ipscanner.io';
     public const STREAM_TIMEOUT = 300.0;
 
@@ -69,6 +72,9 @@ final class Client
     public readonly Account $account;
     public readonly AsnDirectory $asnDirectory;
     public readonly Crawlers $crawlers;
+    public readonly Edge $edge;
+    public readonly Sites $sites;
+    public readonly Gate $gate;
 
     private readonly ?string $apiKey;
     private readonly string $baseUrl;
@@ -93,18 +99,21 @@ final class Client
         $this->account = new Account($this);
         $this->asnDirectory = new AsnDirectory($this);
         $this->crawlers = new Crawlers($this);
+        $this->edge = new Edge($this);
+        $this->sites = new Sites($this);
+        $this->gate = new Gate($this);
     }
 
     /**
-     * Sends a request to the API and returns the decoded JSON body.
+     * Sends a request to the API and returns the decoded JSON body. Pass $authenticated false to omit the API key.
      *
      * @param array<string, scalar|null> $query
      * @param array<string, mixed>|null $body
      * @return array<mixed>
      */
-    public function request(string $method, string $path, array $query = [], ?array $body = null): array
+    public function request(string $method, string $path, array $query = [], ?array $body = null, bool $authenticated = true): array
     {
-        $response = $this->send($method, $path, $query, $body);
+        $response = $this->send($method, $path, $query, $body, authenticated: $authenticated);
         return $this->decode($response->body);
     }
 
@@ -148,10 +157,16 @@ final class Client
      * @param array<string, scalar|null> $query
      * @param array<string, mixed>|null $body
      */
-    private function send(string $method, string $path, array $query, ?array $body, string $accept = 'application/json'): Response
-    {
+    private function send(
+        string $method,
+        string $path,
+        array $query,
+        ?array $body,
+        string $accept = 'application/json',
+        bool $authenticated = true,
+    ): Response {
         $url = $this->url($path, $query);
-        $headers = $this->headers($body !== null, $accept);
+        $headers = $this->headers($body !== null, $accept, $authenticated);
         $payload = $body === null ? null : $this->encode($body);
         $retries = $method === 'GET' ? max(0, $this->maxRetries) : 0;
 
@@ -202,7 +217,7 @@ final class Client
     /**
      * @return array<string, string>
      */
-    private function headers(bool $hasBody, string $accept): array
+    private function headers(bool $hasBody, string $accept, bool $authenticated = true): array
     {
         $headers = [
             'Accept' => $accept,
@@ -211,7 +226,7 @@ final class Client
         if ($hasBody) {
             $headers['Content-Type'] = 'application/json';
         }
-        if ($this->apiKey !== null) {
+        if ($authenticated && $this->apiKey !== null) {
             $headers['Authorization'] = 'Bearer ' . $this->apiKey;
         }
         return $headers;

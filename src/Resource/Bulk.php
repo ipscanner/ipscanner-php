@@ -21,6 +21,7 @@ final class Bulk extends Resource
         'classification' => '',
         'confidence' => 0.0,
         'anonymized' => false,
+        'vpnProvider' => '',
         'score' => 0,
         'grade' => '',
         'isTorExit' => false,
@@ -31,6 +32,8 @@ final class Bulk extends Resource
         'processed' => 0,
         'failed' => 0,
         'metered' => 0,
+        'planRequired' => '',
+        'locked' => [],
     ];
 
     /**
@@ -49,6 +52,7 @@ final class Bulk extends Resource
 
     /**
      * Streams results as they are produced. Yields meta, result, error and done events.
+     * Null and missing fields get empty defaults; locked fields are listed in 'locked'.
      * The done event carries 'complete' => true only when every address was processed.
      *
      * @param list<string>|null $ips
@@ -62,7 +66,7 @@ final class Bulk extends Resource
         ]));
 
         foreach ($lines as $line) {
-            $event = $line + self::EVENT_DEFAULTS;
+            $event = array_filter($line, static fn ($value) => $value !== null) + self::EVENT_DEFAULTS;
             if ($event['type'] === 'done') {
                 $event['complete'] = $event['reason'] === 'complete'
                     && $event['processed'] + $event['failed'] >= $event['total'];

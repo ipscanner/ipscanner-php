@@ -29,6 +29,8 @@ echo $result['purity']['grade'];
 
 Every method returns the decoded JSON response as an associative array, using the same key names as the API.
 
+`vpnProvider` is the VPN brand (for example Mullvad) when known, otherwise null; `provider` is the network owner. On the Free plan, premium fields are null and listed in `locked`, with `planRequired` naming the plan that includes them.
+
 ## Usage
 
 ### IP
@@ -54,7 +56,7 @@ $report = $client->bulk->check(ips: ['1.2.3.4', '5.6.7.8']);
 $report = $client->bulk->check(input: file_get_contents('ips.txt'));
 ```
 
-`stream()` returns a generator of events as the server produces them: one `meta`, then `result` and `error` events, then one `done`. Missing fields are filled with empty defaults.
+`stream()` returns a generator of events as the server produces them: one `meta`, then `result` and `error` events, then one `done`. Missing and null fields are filled with empty defaults.
 
 ```php
 foreach ($client->bulk->stream(ips: $ips) as $event) {
@@ -99,6 +101,36 @@ $csv = $client->provenance->export(from: '2026-01-01', to: '2026-01-31');
 ```
 
 The `check` response uses snake_case keys, as the API returns them. `export` returns the CSV as a string.
+
+### Edge
+
+```php
+$result = $client->edge->check(
+    ip: '1.2.3.4',
+    site: 'site_...',
+    userAgent: $_SERVER['HTTP_USER_AGENT'] ?? null,
+);
+echo $result['class'];
+
+$client->sites->policy('site_...');
+```
+
+`edge->check` is metered as 2 requests. `site` is null when no site was given or the site is unknown.
+
+### Gate
+
+```php
+$result = $client->gate->verify(
+    secret: 'gs_...',
+    token: $token,                     // posted by gate.js
+    remoteIp: $_SERVER['REMOTE_ADDR'],
+);
+if ($result['action'] === 'block') {
+    // reject the form
+}
+```
+
+`gate->verify` sends the site secret instead of the API key and is never retried. The response uses snake_case keys. Token errors (`invalid_token`, `expired_token`, `already_used`, ...) throw `ApiException`; a wrong secret throws `AuthenticationException`.
 
 ### Account
 
@@ -158,7 +190,7 @@ $client = new Client(
 );
 ```
 
-Keyless endpoints (`ip->demo`, `ip->myip`, `asnDirectory`, `crawlers`) work without a key.
+Keyless endpoints (`ip->demo`, `ip->myip`, `asnDirectory`, `crawlers`, `gate->verify`) work without a key.
 
 ## Licence
 

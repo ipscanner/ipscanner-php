@@ -19,6 +19,7 @@ use IPScanner\Resource\AsnDirectory;
 use IPScanner\Resource\Bulk;
 use IPScanner\Resource\Crawlers;
 use IPScanner\Resource\Edge;
+use IPScanner\Resource\Email;
 use IPScanner\Resource\Gate;
 use IPScanner\Resource\Ip;
 use IPScanner\Resource\Provenance;
@@ -27,7 +28,7 @@ use JsonException;
 
 final class Client
 {
-    public const VERSION = '0.2.0';
+    public const VERSION = '0.3.0';
     public const DEFAULT_BASE_URL = 'https://ipscanner.io';
     public const STREAM_TIMEOUT = 300.0;
 
@@ -75,6 +76,7 @@ final class Client
     public readonly Edge $edge;
     public readonly Sites $sites;
     public readonly Gate $gate;
+    public readonly Email $email;
 
     private readonly ?string $apiKey;
     private readonly string $baseUrl;
@@ -102,6 +104,7 @@ final class Client
         $this->edge = new Edge($this);
         $this->sites = new Sites($this);
         $this->gate = new Gate($this);
+        $this->email = new Email($this);
     }
 
     /**

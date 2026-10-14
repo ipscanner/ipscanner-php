@@ -49,6 +49,17 @@ $client->ip->myip();                         // no key needed
 
 Page through history by passing the previous `nextBefore` as `before`. A `nextBefore` of 0 means there are no more pages.
 
+`vpn` and `proxy` carry `purity` (the score breakdown) on paid plans; a locked answer has `deductionCount` instead.
+
+### Email
+
+```php
+$result = $client->email->check('jane@outlok.com');
+// $result['status'] 'risky', $result['reason'] 'typo', $result['suggestion'] 'jane@outlook.com'
+```
+
+Checks syntax, throwaway domains, whether the domain receives mail, typos of big webmail domains and role addresses. The mailbox itself is not probed. One request per address.
+
 ### Bulk
 
 ```php
@@ -124,13 +135,14 @@ $result = $client->gate->verify(
     secret: 'gs_...',
     token: $token,                     // posted by gate.js
     remoteIp: $_SERVER['REMOTE_ADDR'],
+    email: $_POST['email'] ?? null,    // optional: adds the email check
 );
 if ($result['action'] === 'block') {
     // reject the form
 }
 ```
 
-`gate->verify` sends the site secret instead of the API key and is never retried. The response uses snake_case keys. Token errors (`invalid_token`, `expired_token`, `already_used`, ...) throw `ApiException`; a wrong secret throws `AuthenticationException`.
+`gate->verify` sends the site secret instead of the API key and is never retried. The response uses snake_case keys. With `email`, `$result['email']` holds the check and its action, and `$result['action']` is the stricter of the network and email actions. Token errors (`invalid_token`, `expired_token`, `already_used`, ...) throw `ApiException`; a wrong secret throws `AuthenticationException`.
 
 ### Account
 

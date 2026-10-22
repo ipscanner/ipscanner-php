@@ -28,7 +28,7 @@ use JsonException;
 
 final class Client
 {
-    public const VERSION = '0.3.0';
+    public const VERSION = '0.3.1';
     public const DEFAULT_BASE_URL = 'https://ipscanner.io';
     public const STREAM_TIMEOUT = 300.0;
 

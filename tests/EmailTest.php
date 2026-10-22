@@ -24,7 +24,7 @@ final class EmailTest extends TestCase
         $this->assertSame('POST', $request['method']);
         $this->assertSame('https://ipscanner.io/v1/email/check', $request['url']);
         $this->assertSame('Bearer sk_test', $request['headers']['Authorization']);
-        $this->assertSame('ipscanner-php/0.3.0', $request['headers']['User-Agent']);
+        $this->assertSame('ipscanner-php/0.3.1', $request['headers']['User-Agent']);
         $this->assertSame('{"email":"jane@outlok.com"}', $request['body']);
         $this->assertSame('jane@outlook.com', $result['suggestion']);
         $this->assertNull($result['checks']['mx']);

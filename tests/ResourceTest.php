@@ -134,6 +134,19 @@ final class ResourceTest extends TestCase
         $this->client()->asnDirectory->get('google');
     }
 
+    public function testRejectsDotSegments(): void
+    {
+        $client = $this->client();
+        foreach (['.', '..'] as $segment) {
+            try {
+                $client->ip->vpn($segment);
+                $this->fail('expected InvalidArgumentException');
+            } catch (\InvalidArgumentException) {
+            }
+        }
+        $this->assertSame([], $this->transport->requests);
+    }
+
     public function testEdgeCheck(): void
     {
         $this->transport->push(200, [

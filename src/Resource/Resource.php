@@ -31,6 +31,10 @@ abstract class Resource
 
     protected static function segment(string $value): string
     {
+        // "." and ".." would be resolved to another endpoint, with the API key attached.
+        if ($value === '.' || $value === '..') {
+            throw new \InvalidArgumentException(sprintf('ipscanner: invalid path segment "%s"', $value));
+        }
         return rawurlencode($value);
     }
 }
